@@ -36,8 +36,20 @@ long file_modified(const char *path);
 		else
 
 
+#define file_lines(line, len, file)					\
+	for (FILE * __func__##__LINE__##file_lines_n = fopen(file, "r"); \
+	     __func__##__LINE__##file_lines_n;				\
+	     fclose(__func__##__LINE__##file_lines_n), __func__##__LINE__##file_lines_n = 0) \
+		for(size_t len = 0; ! len; len = 1)			\
+			for(char * line = 0; !line && ! len; free(line), line = line ? 0 : (void*)1) \
+				for(len = -1; !line ; len = 0)			\
+					if(getline(&line, &len, __func__##__LINE__##file_lines_n) < 0) \
+					{ free(line); line = 0; break; } \
+					else
 
-#ifdef SSLIB_IMPLEMENTATION
+
+
+#ifdef LIB_IMPLEMENTATION
 
 
 char *file_load(const char *path, size_t *len)
@@ -75,11 +87,13 @@ bool file_write(const char *path, const char *data, size_t len)
 	FILE *f = fopen(path, "w");
 	if(!f)
 		return 0;
+
+	bool ret = true;
 	if(len != fwrite(data, 1, len, f)) {
-		
+		ret = false;
 	}
 	fclose(f);
-	return true;
+	return ret;
 }
 
 
